@@ -9,8 +9,11 @@ fn test_verify_shares() {
     let shares = vss::generate_shares(&coeffs);
     let commitments = vss::generate_commitments(&coeffs);
     for share in shares {
-        assert!(vss::verify_share(share, &commitments),
-            "Share {:?} failed verification", share);
+        assert!(
+            vss::verify_share(share, &commitments),
+            "Share {:?} failed verification",
+            share
+        );
     }
 }
 

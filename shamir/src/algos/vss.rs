@@ -1,16 +1,15 @@
 use rand::Rng;
 
-const Q: i128 = 2003;  
-const P: i128 = 4007;  
-const THRESHOLD: usize = 3; 
-const SHARES_COUNT: usize = 5;  
-const G: i128 = 2;  
+pub const Q: i128 = 2003;  
+pub const P: i128 = 4007;  
+pub const THRESHOLD: usize = 3; 
+pub const SHARES_COUNT: usize = 5;  
+pub const G: i128 = 2;  
 
 fn mod_norm(a: i128, m: i128) -> i128 {
     let r = a % m;
     if r < 0 { r + m } else { r }
 }
-
 
 fn mod_pow(mut base: i128, mut exp: i128, modulus: i128) -> i128 {
     let mut result = 1;
@@ -43,8 +42,7 @@ fn mod_inverse(a: i128, m: i128) -> i128 {
     mod_norm(t, m)
 }
 
-
-fn generate_polynomial(secret: i128, threshold: usize, rng: &mut impl Rng) -> Vec<i128> {
+pub fn generate_polynomial(secret: i128, threshold: usize, rng: &mut impl Rng) -> Vec<i128> {
     let mut coeffs = Vec::with_capacity(threshold);
     coeffs.push(mod_norm(secret, Q));
     for _ in 1..threshold {
@@ -52,7 +50,6 @@ fn generate_polynomial(secret: i128, threshold: usize, rng: &mut impl Rng) -> Ve
     }
     coeffs
 }
-
 
 fn eval_polynomial(coeffs: &[i128], x: i128) -> i128 {
     let mut sum = 0;
@@ -63,34 +60,30 @@ fn eval_polynomial(coeffs: &[i128], x: i128) -> i128 {
     sum
 }
 
-
-fn generate_shares(coeffs: &[i128]) -> Vec<(i128, i128)> {
+pub fn generate_shares(coeffs: &[i128]) -> Vec<(i128, i128)> {
     (1..=SHARES_COUNT as i128)
         .map(|x| (x, eval_polynomial(coeffs, x)))
         .collect()
 }
 
-
-fn generate_commitments(coeffs: &[i128]) -> Vec<i128> {
+pub fn generate_commitments(coeffs: &[i128]) -> Vec<i128> {
     coeffs.iter()
         .map(|&a| mod_pow(G, mod_norm(a, Q), P))
         .collect()
 }
 
-
-fn verify_share(share: (i128, i128), commitments: &[i128]) -> bool {
+pub fn verify_share(share: (i128, i128), commitments: &[i128]) -> bool {
     let (x, y) = share;
     let lhs = mod_pow(G, y, P);
     let mut rhs = 1;
     for (i, &commitment) in commitments.iter().enumerate() {
-    
         let exponent = mod_pow(x, i as i128, Q);
         rhs = mod_norm(rhs * mod_pow(commitment, exponent, P), P);
     }
     lhs == rhs
 }
 
-fn reconstruct_secret(shares: &[(i128, i128)]) -> i128 {
+pub fn reconstruct_secret(shares: &[(i128, i128)]) -> i128 {
     let mut secret = 0;
     for (j, &(xj, yj)) in shares.iter().enumerate() {
         let mut num = 1;
@@ -130,4 +123,3 @@ pub fn run_vss(secret: i128) {
     let recovered = reconstruct_secret(&shares[0..THRESHOLD]);
     println!("Reconstructed secret (from first {} shares): {}", THRESHOLD, recovered);
 }
-
