@@ -15,9 +15,8 @@ pub fn generate_polynomial(secret: u64, threshold: usize) -> Result<Vec<u64>, Sh
     }
 
     let mut rng = rand::thread_rng();
-    let mut coeffs = vec![secret]; // Insert the constant term first.
+    let mut coeffs = vec![secret]; 
     for _ in 1..threshold {
-        // Insert the remaining coefficients randomly from 1 to PRIME-1.
         coeffs.push(rng.gen_range(1..PRIME));
     }
     Ok(coeffs)
@@ -95,7 +94,6 @@ pub fn reconstruct_secret(shares: &[(u64, u64)], threshold: usize) -> Result<u64
     }
     Ok((secret as u64) % PRIME)
 }
-// In shamir/src/algos/sss.rs
 
 pub fn run_shamir_with_secret(secret: u64) -> Result<u64, ShamirError> {
     let threshold = 3;
@@ -110,66 +108,3 @@ pub fn run_shamir_with_secret(secret: u64) -> Result<u64, ShamirError> {
     assert_eq!(reconstructed, secret);
     Ok(secret)
 }
-
-pub fn run_shamir() -> Result<(), ShamirError> {
-    let mut rng = rand::thread_rng();
-    let secret: u64 = rng.gen_range(1..=10000);
-    let threshold = 3;
-    let num_shares = 5;
-
-    let shares = generate_shares(secret, threshold, num_shares)?;
-    println!("Generated shares: {:?}", shares);
-
-    let reconstructed = reconstruct_secret(&shares[..threshold], threshold)?;
-    println!("Successfully reconstructed secret: {}", reconstructed);
-
-    assert_eq!(reconstructed, secret);
-    Ok(())
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_generate_polynomial() {
-        let secret = 1234;
-        let threshold = 3;
-        let poly = generate_polynomial(secret, threshold);
-        assert!(poly.is_ok());
-        let poly = poly.unwrap();
-        assert_eq!(poly.len(), threshold);
-        assert_eq!(poly[0], secret);
-    }
-
-    #[test]
-    fn test_evaluate_polynomial() {
-        let coeffs = vec![5, 2, 3]; 
-        let x = 2;
-        let result = evaluate_polynomial(&coeffs, x);
-        assert_eq!(result, (3 * 4 + 2 * 2 + 5) % PRIME); 
-    }
-
-    #[test]
-    fn test_generate_shares() {
-        let secret = 9876;
-        let threshold = 3;
-        let num_shares = 5;
-        let shares = generate_shares(secret, threshold, num_shares);
-        assert!(shares.is_ok());
-        let shares = shares.unwrap();
-        assert_eq!(shares.len(), num_shares);
-    }
-
-    #[test]
-    fn test_reconstruct_secret() {
-        let secret = 7777;
-        let threshold = 3;
-        let num_shares = 5;
-        let shares = generate_shares(secret, threshold, num_shares).unwrap();
-        let reconstructed = reconstruct_secret(&shares[..threshold], threshold);
-        assert!(reconstructed.is_ok());
-        assert_eq!(reconstructed.unwrap(), secret);
-    }
-}
-
