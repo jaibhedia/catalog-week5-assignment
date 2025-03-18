@@ -95,6 +95,21 @@ pub fn reconstruct_secret(shares: &[(u64, u64)], threshold: usize) -> Result<u64
     }
     Ok((secret as u64) % PRIME)
 }
+// In shamir/src/algos/sss.rs
+
+pub fn run_shamir_with_secret(secret: u64) -> Result<u64, ShamirError> {
+    let threshold = 3;
+    let num_shares = 5;
+
+    let shares = generate_shares(secret, threshold, num_shares)?;
+    println!("(SSS) Generated shares: {:?}", shares);
+
+    let reconstructed = reconstruct_secret(&shares[..threshold], threshold)?;
+    println!("(SSS) Successfully reconstructed secret: {}", reconstructed);
+
+    assert_eq!(reconstructed, secret);
+    Ok(secret)
+}
 
 pub fn run_shamir() -> Result<(), ShamirError> {
     let mut rng = rand::thread_rng();
@@ -111,6 +126,7 @@ pub fn run_shamir() -> Result<(), ShamirError> {
     assert_eq!(reconstructed, secret);
     Ok(())
 }
+
 #[cfg(test)]
 mod tests {
     use super::*;
